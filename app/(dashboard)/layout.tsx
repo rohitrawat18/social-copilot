@@ -108,7 +108,6 @@ export default function DashboardLayout({
           <div className="flex-shrink-0 p-4 border-t border-sidebar-border bg-sidebar-accent/30">
             <div className="flex items-center gap-3 px-2 py-1.5 rounded-xl border border-transparent hover:border-sidebar-border hover:bg-sidebar-accent transition-all duration-200">
               <UserButton
-                afterSignOutUrl="/"
                 appearance={{
                   elements: {
                     avatarBox: "h-9 w-9 border border-violet-500/30",
@@ -195,7 +194,7 @@ export default function DashboardLayout({
         {/* User profile at bottom */}
         <div className="p-4 border-t border-sidebar-border bg-sidebar-accent/30">
           <div className="flex items-center gap-3">
-            <UserButton afterSignOutUrl="/" />
+            <UserButton />
             <div className="flex flex-col min-w-0">
               <span className="text-xs font-semibold truncate">
                 {isLoaded && user ? user.fullName || "Rohit Rawat" : "Loading..."}
@@ -238,7 +237,7 @@ export default function DashboardLayout({
 
             {/* Clerk User Profile */}
             <div className="md:hidden">
-              <UserButton afterSignOutUrl="/" />
+              <UserButton />
             </div>
           </div>
         </header>

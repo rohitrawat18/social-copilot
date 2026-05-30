@@ -21,10 +21,6 @@ import {
   CheckCircle2,
   Clock,
   AlertCircle,
-  Instagram,
-  Linkedin,
-  Youtube,
-  Twitter,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 

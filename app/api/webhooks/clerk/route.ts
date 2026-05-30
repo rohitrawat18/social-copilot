@@ -50,7 +50,7 @@ export async function POST(req: Request) {
   // Handle the event
   const eventType = evt.type;
 
-  if (eventType === "user.created") {
+  if (eventType === "user.created" || eventType === "user.updated") {
     const { id, email_addresses } = evt.data;
     const email = email_addresses?.[0]?.email_address || "";
 
@@ -66,10 +66,52 @@ export async function POST(req: Request) {
         email,
         plan: "free",
         aiUsageCount: 0,
+      }).onConflictDoUpdate({
+        target: users.clerkId,
+        set: { email },
       });
       return new Response("User successfully synchronized in DB", { status: 201 });
     } catch (dbError) {
       console.error("Database error synchronizing user:", dbError);
+      return new Response("Database synchronization failed", { status: 500 });
+    }
+  }
+
+  if (eventType === "session.created") {
+    const { user_id } = evt.data;
+    if (!user_id) {
+      return new Response("Error occurred -- missing user ID in payload", {
+        status: 400,
+      });
+    }
+    
+    // We need to fetch the user's email from Clerk to insert them if they don't exist
+    try {
+      // First check if they already exist to avoid unnecessary API calls
+      const existingUser = await db.query.users.findFirst({
+        where: (users, { eq }) => eq(users.clerkId, user_id),
+      });
+
+      if (!existingUser) {
+        // Import clerkClient dynamically to avoid top-level issues if not needed
+        const { clerkClient } = await import("@clerk/nextjs/server");
+        
+        // Next.js Clerk SDK v5+ uses an async await clerkClient() pattern in some cases,
+        // but typically it's an object. Let's use the standard method.
+        const client = await clerkClient();
+        const clerkUser = await client.users.getUser(user_id);
+        const email = clerkUser.emailAddresses[0]?.emailAddress || "";
+
+        await db.insert(users).values({
+          clerkId: user_id,
+          email,
+          plan: "free",
+          aiUsageCount: 0,
+        }).onConflictDoNothing();
+      }
+      return new Response("Session created and user synced", { status: 200 });
+    } catch (dbError) {
+      console.error("Database error synchronizing user on session.created:", dbError);
       return new Response("Database synchronization failed", { status: 500 });
     }
   }
